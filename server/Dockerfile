@@ -6,22 +6,33 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8
 
-# 1. 安装系统基础工具、构建工具与 Python 完整环境
+# 1. 安装系统基础工具、文本编辑器、调试工具与 Python 完整环境
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     ca-certificates \
     curl \
+    wget \
     git \
     gnupg \
-    wget \
     jq \
     build-essential \
+    sudo \
+    vim \
+    nano \
+    less \
+    procps \
+    tree \
+    zip \
+    unzip \
+    iputils-ping \
+    net-tools \
     python3 \
     python3-pip \
     python3-venv \
     python3-dev \
     python-is-python3 \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  && echo "ALL ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # 2. 通过 NodeSource 官方仓库安装最新版 Node.js 与 npm
 RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash - \
