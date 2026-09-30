@@ -67,23 +67,27 @@ npm install -g .
 zhen --help
 ```
 
-### 2. 初始化全局连接配置
+### 2. 交互式初始化全局连接配置
 
-只需配置一次服务器信息（保存在 `~/.zhen/config.json`）：
-
+只需在终端执行一行命令：
 ```bash
-# 设置云服务器 IP
-zhen config set host <你的服务器公网IP>
-
-# 设置 SSH 用户 (默认 root)
-zhen config set user root
-
-# 设置私钥路径 (默认 ~/.ssh/id_rsa 或 id_ed25519)
-zhen config set key ~/.ssh/id_rsa
-
-# 查看当前生效配置
-zhen config
+zhen init
+# 或运行: zhen config
 ```
+
+向导将一步步引导你完成配置并自动测试连通性：
+1. **服务器地址 (Host)**：输入你的云服务器公网 IP 或域名；
+2. **SSH 端口 (Port)**：默认 `22`（直接回车即可）；
+3. **用户名 (User)**：默认 `root`（直接回车即可）；
+4. **身份认证方式**：
+   - 🔑 **SSH 私钥认证**：自动推荐本地检测到的私钥路径（`~/.ssh/id_ed25519` 或 `~/.ssh/id_rsa`）；
+   - 🔒 **账号密码认证**：密码掩码录入，并提示**一键将本地公钥写入服务器，开启后续终端连接完全免密**；
+5. **即时连通性测试**：配置完成后自动验证 SSH 连通性，通过后安全写入 `~/.zhen/config.json`。
+
+> [!TIP]
+> - 查看当前生效配置：`zhen config`
+> - 重新运行向导：`zhen config init` 或 `zhen init`
+> - 单独修改某一项：`zhen config set host <IP>`
 
 > [!TIP]
 > 如果某个特殊项目有独立的服务器或端口，也可在该项目根目录下创建 `.env`，其优先级会自动覆盖全局配置。

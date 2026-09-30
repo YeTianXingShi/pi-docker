@@ -5,6 +5,7 @@ import path from 'node:path';
 import { getConfig, readGlobalConfig, writeGlobalConfig } from '../lib/config.mjs';
 import { runConnect } from '../lib/connect.mjs';
 import { runSync } from '../lib/sync.mjs';
+import { runConfigWizard } from '../lib/wizard.mjs';
 
 const program = new Command();
 
@@ -53,11 +54,16 @@ addSshOptions(syncCmd).action(async (direction, source, target, options) => {
   await runSync(direction, source, target, config);
 });
 
-// 3. config 命令 (管理全局 ~/.zhen/config.json)
+// 3. config 命令 (管理全局 ~/.zhen/config.json 或启动交互向导)
 program
   .command('config [action] [key] [val]')
-  .description('查看或设置全局连接配置 (~/.zhen/config.json)')
-  .action((action, key, val) => {
+  .description('查看、交互式引导配置或设置全局连接配置 (~/.zhen/config.json)')
+  .action(async (action, key, val) => {
+    if (action === 'init' || action === 'setup') {
+      await runConfigWizard();
+      return;
+    }
+
     const currentGlobal = readGlobalConfig();
     if (action === 'set' && key && val) {
       // 规范化 Key 名称 (如 host -> SSH_HOST)
@@ -66,21 +72,36 @@ program
       writeGlobalConfig(currentGlobal);
       console.log(`✅ 已保存全局配置: ${normalizedKey} = ${val}`);
       console.log(`📄 配置文件位置: ~/.zhen/config.json`);
-    } else {
-      console.log('========================================================');
-      console.log('⚙️  当前生效配置 (优先级: CLI > 当前目录 .env > 全局配置):');
-      console.log(JSON.stringify(getConfig({}), null, 2));
-      console.log('\n💡 设置全局配置示例:');
-      console.log('   zhen config set host 1.2.3.4');
-      console.log('   zhen config set user root');
-      console.log('   zhen config set key ~/.ssh/id_rsa');
-      console.log('========================================================');
+      return;
     }
+
+    // 如果尚未配置有效主机，自动触发交互式向导
+    if (!currentGlobal.SSH_HOST || currentGlobal.SSH_HOST === 'my-server') {
+      console.log('💡 检测到尚未配置远端服务器信息，自动启动配置向导...\n');
+      await runConfigWizard();
+      return;
+    }
+
+    console.log('========================================================');
+    console.log('⚙️  当前生效配置 (优先级: CLI > 当前目录 .env > 全局配置):');
+    console.log(JSON.stringify(getConfig({}), null, 2));
+    console.log('\n💡 提示:');
+    console.log('   zhen config init           # 重新启动交互式引导配置向导');
+    console.log('   zhen config set host <IP>  # 修改指定配置项');
+    console.log('========================================================');
+  });
+
+// 4. init 快捷命令
+program
+  .command('init')
+  .description('启动交互式引导配置向导 (别名: zhen config init)')
+  .action(async () => {
+    await runConfigWizard();
   });
 
 // 如果执行 zhen 且没有指定子命令，或者第一个参数不是已知命令，则默认作为 connect 执行
 const firstArg = process.argv[2];
-if (!firstArg || (!['connect', 'sync', 'config', 'help', '-h', '--help', '-V', '--version'].includes(firstArg))) {
+if (!firstArg || (!['connect', 'sync', 'config', 'init', 'help', '-h', '--help', '-V', '--version'].includes(firstArg))) {
   // 如果第一个参数不是标准命令，把它视作项目名称
   const project = firstArg;
   const config = getConfig({});
