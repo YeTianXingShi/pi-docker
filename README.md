@@ -17,9 +17,9 @@
   - 一次全局安装（`npm install -g .`），在电脑上任何工程目录下随处可用，无需依赖 `.sh` 脚本。
 - ⚙️ **全局配置中心（`~/.zhen/config.json`）**：
   - 只需一次性设置服务器 Host 与 Key（如 `zhen config set host 1.2.3.4`），后续在任何项目目录中都能即开即用。
-- 🔄 **双向全量文件同步（`sync`）**：
-  - `zhen sync push`：将当前本地工程目录全量推送到云端 `/root/projects/<项目名>`（零过滤）。
-  - `zhen sync pull`：将云端项目全量拉取回当前本地工程目录。
+- ⚡ **Tar+Gzip 极速流式镜像同步（`sync`）**：
+  - 基于 SSH 管道与 Tar 流式实时压缩传输，速度比普通 SFTP 快 10~50 倍；
+  - **默认完全同步与删除同步**：`zhen sync push`（本地向远端镜像同步）与 `zhen sync pull`（远端向本地镜像同步），源端删除的文件会在目标端自动同步删除，保持 100% 镜像一致。
 - 🔒 **纯 SSH 隧道安全调试 (支持端口范围区间)**：
   - 容器端口通过区间形式映射并绑定到服务端的 `127.0.0.1`（默认 `36601-36699`，支持环境变量灵活配置），彻底杜绝公网暴露；
   - 客户端连接时自动通过 SSH 隧道批量映射到本地 `localhost`，容器内启动在此区间的任何服务，本地均可直接秒级预览。
@@ -42,7 +42,7 @@ pi-docker/
 ├── lib/
 │   ├── config.mjs           # 全局 ~/.zhen/config.json 与当前 .env 优先级合并
 │   ├── connect.mjs          # 动态项目直达终端与端口隧道
-│   └── sync.mjs             # SFTP 双向全量同步引擎 (默认当前项目)
+│   └── sync.mjs             # 基于 Tar+Gzip 管道流的高速镜像同步引擎 (含删除同步)
 ├── package.json             # 注册全局命令 zhen
 ├── .env.example             # 客户端连接配置模板
 ├── .gitignore               # 保护敏感与临时文件
@@ -118,7 +118,8 @@ zhen
 ```bash
 cd ~/vscode-projects/DetradeTestTools
 
-# 全量推送当前项目到服务器 /root/projects/DetradeTestTools
+# 将当前本地项目极速推送到服务器 /root/projects/DetradeTestTools
+# （完全镜像同步：本地修改被全量覆写，本地删除的文件在远端自动同步删除）
 zhen sync push
 ```
 
@@ -127,7 +128,8 @@ zhen sync push
 ```bash
 cd ~/vscode-projects/DetradeTestTools
 
-# 全量将云端 /root/projects/DetradeTestTools 覆盖拉取回本地
+# 将云端 /root/projects/DetradeTestTools 极速拉取回本地
+# （完全镜像同步：远端修改被全量覆写，远端删除的文件在本地自动同步删除）
 zhen sync pull
 ```
 
