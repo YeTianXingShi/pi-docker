@@ -1,0 +1,29 @@
+{
+  "name": "zhen",
+  "version": "1.0.0",
+  "description": "跨平台 Pi Coding Agent 全局远端开发客户端 (Windows & macOS)",
+  "type": "module",
+  "bin": {
+    "zhen": "./bin/cli.mjs"
+  },
+  "scripts": {
+    "zhen": "node ./bin/cli.mjs",
+    "connect": "node ./bin/cli.mjs connect",
+    "sync:push": "node ./bin/cli.mjs sync push",
+    "sync:pull": "node ./bin/cli.mjs sync pull"
+  },
+  "keywords": [
+    "pi-coding-agent",
+    "docker",
+    "zhen",
+    "remote-development",
+    "cross-platform"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.7",
+    "ssh2-sftp-client": "^11.0.0"
+  }
+}

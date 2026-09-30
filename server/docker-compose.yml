@@ -1,0 +1,38 @@
+services:
+  pi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pi-agent:latest
+    container_name: pi-agent
+    init: true            # 1. 解决 Node.js 信号处理与僵尸进程回收
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+    restart: unless-stopped
+    entrypoint: ["sleep", "infinity"] # 保持容器在后台常驻，供随时秒级 exec 进入
+
+    # 支持从当前目录的 .env 文件加载变量
+    env_file:
+      - path: .env
+        required: false
+
+    environment:
+      - TERM=xterm-256color
+      - HOME=${CONTAINER_HOME:-/root}   # 支持通过 .env 切换 /root 或自定义路径
+
+    # 端口调试方案：仅绑定到服务端本地 127.0.0.1 回环地址
+    # 端口范围区间配置，默认 36601-36699
+    ports:
+      - "127.0.0.1:${PORT_RANGE:-36601-36699}:${PORT_RANGE:-36601-36699}"
+
+    volumes:
+      # 1. 持久化 Pi 配置：保存在本项目 server/data/pi 中，而非系统全局目录
+      - ./data/pi:${CONTAINER_HOME:-/root}/.pi/agent
+      # 2. 挂载宿主机 Git 用户配置（只读，解决 git commit 作者信息缺失问题）
+      - ~/.gitconfig:${CONTAINER_HOME:-/root}/.gitconfig:ro
+      # 3. 动态工作空间：统一挂载宿主机项目根目录到 /workspace，与客户端选择的项目动态联动
+      - ${PROJECTS_ROOT:-/root/projects}:/workspace
+
+    user: "${DOCKER_USER:-0:0}"
+
