@@ -33,7 +33,8 @@ pi-docker/
 ├── server/                  # 🖥️ 服务端模块 (云服务器专用)
 │   ├── Dockerfile           # 容器定义：基于 ubuntu:24.04 构建，内置最新 Node.js、Python 与 pi agent
 │   ├── docker-compose.yml   # 动态工作区 (/root/projects) 与项目内配置持久化 (./data/pi)
-│   ├── start.sh             # 服务端后台常驻与动态项目直达脚本
+│   ├── start.sh             # 服务端后台常驻容器启动脚本 (纯后台启动，正常退出控制台)
+│   ├── stop.sh              # 服务端容器停止脚本
 │   ├── .env.example         # 服务端环境配置模板 (root 用户与权限)
 │   └── .gitignore           # 保护 server/data/ 凭据数据
 ├── bin/
@@ -176,15 +177,15 @@ Host my-pi-server
    cd /root
    git clone <pi-docker-git-url> pi-docker
    ```
-2. 进入 `server` 目录并启动：
+2. 进入 `server` 目录并启动服务：
    ```bash
    cd /root/pi-docker/server
-   cp .env.example .env
-   chmod +x start.sh
+   chmod +x start.sh stop.sh
    ./start.sh
    ```
 3. 启动后：
-   - 容器已在后台常驻运行；
-   - Pi 配置保存在 `/root/pi-docker/server/data/pi`；
-   - 所有项目统一挂载到 `/root/projects`；
-   - 客户端即可在本地通过 `zhen` 命令随时穿透与同步任意项目！
+   - 脚本会自动后台拉起容器并打印就绪信息后正常返回服务器控制台（不强占终端）；
+   - 容器常驻后台运行，端口区间 `36601-36699` 绑定于服务器 `127.0.0.1`；
+   - Pi 配置保存在 `server/data/pi`；
+   - 如需暂停容器，在 server 目录下运行 `./stop.sh` 即可；
+   - 客户端在本地任意工程目录中通过 `zhen` 命令随时穿透进入各项目工作区！
